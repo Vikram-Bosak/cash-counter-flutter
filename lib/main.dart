@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'providers/app_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  await Hive.openBox('cash_counter_db');
+  try {
+    await Hive.initFlutter();
+    await Hive.openBox('cash_counter_db');
+  } catch (e) {
+    debugPrint('Hive init error: $e');
+  }
   runApp(const CashCounterApp());
 }
 
@@ -15,23 +17,17 @@ class CashCounterApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AppProvider()),
-      ],
-      child: MaterialApp(
-        title: 'Cash Counter',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF15803D),
-            brightness: Brightness.light,
-          ),
-          fontFamily: 'Poppins',
+    return MaterialApp(
+      title: 'Cash Counter',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF15803D),
+          brightness: Brightness.light,
         ),
-        home: const MainScreen(),
       ),
+      home: const MainScreen(),
     );
   }
 }
@@ -46,18 +42,19 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const KhataScreen(),
-    const CashCounterScreen(),
-    const StockScreen(),
-    const SettingsScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: const [
+          HomeScreen(),
+          KhataScreen(),
+          CashCounterScreen(),
+          StockScreen(),
+          SettingsScreen(),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -66,18 +63,20 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.book), label: 'Khata'),
-          NavigationDestination(icon: Icon(Icons.payments), label: 'Cash'),
-          NavigationDestination(icon: Icon(Icons.inventory), label: 'Stock'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.book_outlined), selectedIcon: Icon(Icons.book), label: 'Khata'),
+          NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments), label: 'Cash'),
+          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Stock'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
   }
 }
 
-// ─── SCREENS ────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -87,9 +86,11 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // Green Header
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
+            backgroundColor: const Color(0xFF052e16),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -118,6 +119,7 @@ class HomeScreen extends StatelessWidget {
                                     fontSize: 14,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
                                 const Text(
                                   'Aaj ka Hisaab',
                                   style: TextStyle(
@@ -130,19 +132,33 @@ class HomeScreen extends StatelessWidget {
                             ),
                             Row(
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.search, color: Colors.white),
-                                  onPressed: () {},
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.search, color: Colors.white),
+                                    onPressed: () {},
+                                  ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.notifications_none, color: Colors.white),
-                                  onPressed: () {},
+                                const SizedBox(width: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.notifications_none, color: Colors.white),
+                                    onPressed: () {},
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
                         const SizedBox(height: 24),
+                        // Balance Card
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -169,15 +185,14 @@ class HomeScreen extends StatelessWidget {
                                   color: Colors.white,
                                   fontSize: 36,
                                   fontWeight: FontWeight.w800,
-                                  fontFamily: 'JetBrainsMono',
                                 ),
                               ),
                               const SizedBox(height: 16),
                               Row(
                                 children: [
-                                  _buildBalancePill('Dena Baaki', '₹45.2K', const Color(0xFFef4444)),
+                                  _buildBalancePill('Dena', '₹45.2K', const Color(0xFFef4444)),
                                   const SizedBox(width: 10),
-                                  _buildBalancePill('Lena Baaki', '₹1.23L', const Color(0xFF4ade80)),
+                                  _buildBalancePill('Lena', '₹1.23L', const Color(0xFF4ade80)),
                                   const SizedBox(width: 10),
                                   _buildBalancePill('Bachat', '₹3,200', const Color(0xFFf59e0b)),
                                 ],
@@ -192,6 +207,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -211,10 +227,10 @@ class HomeScreen extends StatelessWidget {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.5,
                     children: [
-                      _buildModuleCard(context, '💰', 'Cash Count', 'Nakdi ginein', const Color(0xFFdcfce7)),
-                      _buildModuleCard(context, '📒', 'Udhar Khata', 'Credit/Debit', const Color(0xFFdbeafe)),
-                      _buildModuleCard(context, '📈', 'Amdani', 'Income/Expense', const Color(0xFFede9fe)),
-                      _buildModuleCard(context, '📦', 'Stock', 'Maal ka hisaab', const Color(0xFFfee2e2)),
+                      _buildModuleCard(context, '💰', 'Cash Count', 'Nakdi ginein', const Color(0xFFdcfce7), Colors.green),
+                      _buildModuleCard(context, '📒', 'Udhar Khata', 'Credit/Debit', const Color(0xFFdbeafe), Colors.blue),
+                      _buildModuleCard(context, '📈', 'Amdani', 'Income/Expense', const Color(0xFFede9fe), Colors.purple),
+                      _buildModuleCard(context, '📦', 'Stock', 'Maal ka hisaab', const Color(0xFFfee2e2), Colors.red),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -225,6 +241,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildTransactionCard('Ramesh Sharma', 'Gehu ka hisaab', '₹5,000', true),
                   _buildTransactionCard('Suresh Patel', 'Pichli bakaya', '₹2,000', false),
+                  _buildTransactionCard('Meena Devi', 'Aaj ki payment', '₹1,500', true),
                 ],
               ),
             ),
@@ -250,7 +267,6 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                fontFamily: 'JetBrainsMono',
               ),
             ),
             Text(
@@ -267,7 +283,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModuleCard(BuildContext context, String icon, String title, String subtitle, Color bgColor) {
+  Widget _buildModuleCard(BuildContext context, String icon, String title, String subtitle, Color bgColor, Color iconColor) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -281,16 +297,16 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(child: Text(icon, style: const TextStyle(fontSize: 20))),
+              child: Center(child: Text(icon, style: const TextStyle(fontSize: 22))),
             ),
             const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
           ],
         ),
@@ -304,6 +320,7 @@ class HomeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 44,
           height: 44,
@@ -311,7 +328,10 @@ class HomeScreen extends StatelessWidget {
             color: isCredit ? const Color(0xFFfee2e2) : const Color(0xFFdcfce7),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(isCredit ? Icons.arrow_upward : Icons.arrow_downward, color: isCredit ? Colors.red : Colors.green),
+          child: Icon(
+            isCredit ? Icons.arrow_upward : Icons.arrow_downward,
+            color: isCredit ? Colors.red : Colors.green,
+          ),
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(note, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
@@ -320,13 +340,17 @@ class HomeScreen extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w800,
             color: isCredit ? Colors.red : Colors.green,
-            fontFamily: 'JetBrainsMono',
+            fontSize: 15,
           ),
         ),
       ),
     );
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// KHATA SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class KhataScreen extends StatelessWidget {
   const KhataScreen({super.key});
@@ -346,6 +370,7 @@ class KhataScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
+            backgroundColor: const Color(0xFF052e16),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -368,20 +393,16 @@ class KhataScreen extends StatelessWidget {
                               '📒 Udhar Khata',
                               style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                             ),
-                            Row(
-                              children: [
-                                IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {}),
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.add, size: 18),
-                                  label: const Text('Khata'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFf59e0b),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                  ),
-                                  onPressed: () => _showAddPartyDialog(context),
-                                ),
-                              ],
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFf59e0b),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                                label: const Text('Khata', style: TextStyle(color: Colors.white)),
+                                onPressed: () {},
+                              ),
                             ),
                           ],
                         ),
@@ -416,7 +437,7 @@ class KhataScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF16a34a),
         child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () => _showAddTransactionDialog(context),
+        onPressed: () {},
       ),
     );
   }
@@ -431,7 +452,7 @@ class KhataScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(value, style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'JetBrainsMono')),
+            Text(value, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
             Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9)),
           ],
         ),
@@ -455,13 +476,7 @@ class KhataScreen extends StatelessWidget {
           ),
         ),
         title: Text(party['name'], style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('📱 ${party['phone']}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-            Text('Akhri: Kal • ₹500', style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
-          ],
-        ),
+        subtitle: Text('📱 ${party['phone']}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
         trailing: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -471,7 +486,7 @@ class KhataScreen extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 color: isCredit ? Colors.red : Colors.green,
-                fontFamily: 'JetBrainsMono',
+                fontSize: 16,
               ),
             ),
             Container(
@@ -481,7 +496,7 @@ class KhataScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                isCredit ? '⬆ Lena Hai' : '⬇ Dena Hai',
+                isCredit ? '⬆ Lena' : '⬇ Dena',
                 style: TextStyle(fontSize: 10, color: isCredit ? Colors.red : Colors.green, fontWeight: FontWeight.w600),
               ),
             ),
@@ -490,67 +505,11 @@ class KhataScreen extends StatelessWidget {
       ),
     );
   }
-
-  void _showAddPartyDialog(BuildContext context) {
-    showDialog(context: context, builder: (context) => AlertDialog(
-      title: const Text('Naya Khata'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(decoration: InputDecoration(labelText: 'Naam', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
-          const SizedBox(height: 12),
-          TextField(decoration: InputDecoration(labelText: 'Phone', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
-        ],
-      ),
-      actions: [
-        TextButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(context)),
-        ElevatedButton(child: const Text('Save'), onPressed: () => Navigator.pop(context)),
-      ],
-    ));
-  }
-
-  void _showAddTransactionDialog(BuildContext context) {
-    showDialog(context: context, builder: (context) => AlertDialog(
-      title: const Text('Naya Hisaab'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade100, foregroundColor: Colors.red),
-                  child: const Text('⬆ Credit'),
-                  onPressed: () {},
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade100, foregroundColor: Colors.green),
-                  child: const Text('⬇ Debit'),
-                  onPressed: () {},
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Amount (₹)',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(context)),
-        ElevatedButton(child: const Text('Save'), onPressed: () => Navigator.pop(context)),
-      ],
-    ));
-  }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CASH COUNTER SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class CashCounterScreen extends StatefulWidget {
   const CashCounterScreen({super.key});
@@ -562,16 +521,16 @@ class CashCounterScreen extends StatefulWidget {
 class _CashCounterScreenState extends State<CashCounterScreen> {
   final Map<int, int> _quantities = {};
   final List<Map<String, dynamic>> _denominations = [
-    {'val': 2000, 'label': '₹2000', 'sub': 'Do Hazaar', 'color': const Color(0xFFfce7f3)},
-    {'val': 500, 'label': '₹500', 'sub': 'Paanch Sau', 'color': const Color(0xFFede9fe)},
-    {'val': 200, 'label': '₹200', 'sub': 'Do Sau', 'color': const Color(0xFFffedd5)},
-    {'val': 100, 'label': '₹100', 'sub': 'Ek Sau', 'color': const Color(0xFFdbeafe)},
-    {'val': 50, 'label': '₹50', 'sub': 'Pachaas', 'color': const Color(0xFFd1fae5)},
-    {'val': 20, 'label': '₹20', 'sub': 'Bees', 'color': const Color(0xFFfef3c7)},
-    {'val': 10, 'label': '₹10', 'sub': 'Das', 'color': const Color(0xFFecfccb)},
-    {'val': 5, 'label': '₹5', 'sub': 'Paanch (Coin)', 'color': const Color(0xFFf1f5f9)},
-    {'val': 2, 'label': '₹2', 'sub': 'Do (Coin)', 'color': const Color(0xFFf8fafc)},
-    {'val': 1, 'label': '₹1', 'sub': 'Ek (Coin)', 'color': const Color(0xFFf9fafb)},
+    {'val': 2000, 'label': '₹2000', 'sub': 'Do Hazaar'},
+    {'val': 500, 'label': '₹500', 'sub': 'Paanch Sau'},
+    {'val': 200, 'label': '₹200', 'sub': 'Do Sau'},
+    {'val': 100, 'label': '₹100', 'sub': 'Ek Sau'},
+    {'val': 50, 'label': '₹50', 'sub': 'Pachaas'},
+    {'val': 20, 'label': '₹20', 'sub': 'Bees'},
+    {'val': 10, 'label': '₹10', 'sub': 'Das'},
+    {'val': 5, 'label': '₹5', 'sub': 'Paanch'},
+    {'val': 2, 'label': '₹2', 'sub': 'Do'},
+    {'val': 1, 'label': '₹1', 'sub': 'Ek'},
   ];
 
   int get _total {
@@ -586,6 +545,7 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
+            backgroundColor: const Color(0xFF052e16),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -624,7 +584,6 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
                             color: Colors.white,
                             fontSize: 38,
                             fontWeight: FontWeight.w800,
-                            fontFamily: 'JetBrainsMono',
                           ),
                         ),
                         if (_total >= 100000)
@@ -632,16 +591,6 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
                             '${(_total / 100000).toStringAsFixed(2)} Lakh',
                             style: TextStyle(color: Colors.green.shade300, fontSize: 14),
                           ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            _buildQuickChip('Reset'),
-                            _buildQuickChip('PDF Export'),
-                            _buildQuickChip('WhatsApp'),
-                            _buildQuickChip('Save'),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -664,25 +613,26 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: d['color'],
-                          borderRadius: BorderRadius.circular(6),
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(d['label'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                        child: Text(d['label'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Colors.green)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(d['sub'], style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
                             color: Colors.green,
                             onPressed: () => setState(() => _quantities[d['val']] = (qty - 1).clamp(0, 99999)),
                           ),
-                          Text('$qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'JetBrainsMono')),
+                          Text('$qty', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
                             color: Colors.green,
@@ -692,14 +642,14 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
                       ),
                       const SizedBox(width: 12),
                       SizedBox(
-                        width: 70,
+                        width: 80,
                         child: Text(
                           '₹${subtotal.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
                           textAlign: TextAlign.right,
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: subtotal > 0 ? Colors.green.shade700 : Colors.grey.shade400,
-                            fontFamily: 'JetBrainsMono',
+                            fontSize: 15,
                           ),
                         ),
                       ),
@@ -714,38 +664,56 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
       ),
     );
   }
-
-  Widget _buildQuickChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-    );
-  }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STOCK SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class StockScreen extends StatelessWidget {
   const StockScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final items = [
+      {'name': 'Atta (10kg)', 'rate': '₹450', 'stock': '25 pieces'},
+      {'name': 'Sugar (5kg)', 'rate': '₹220', 'stock': '40 pieces'},
+      {'name': 'Rice (Basmati)', 'rate': '₹180/kg', 'stock': '100 kg'},
+      {'name': 'Dal (Toor)', 'rate': '₹140/kg', 'stock': '50 kg'},
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('📦 Stock / Items'),
         backgroundColor: const Color(0xFF052e16),
         foregroundColor: Colors.white,
       ),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: [
-          _buildItemCard('Atta (10kg)', '₹450', '25 pieces'),
-          _buildItemCard('Sugar (5kg)', '₹220', '40 pieces'),
-          _buildItemCard('Rice (Basmati)', '₹180/kg', '100 kg'),
-        ],
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(12),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.inventory_2, color: Colors.red),
+              ),
+              title: Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text('${item['rate']} • ${item['stock']}', style: TextStyle(color: Colors.grey.shade600)),
+              trailing: const Icon(Icons.chevron_right),
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF16a34a),
@@ -754,29 +722,11 @@ class StockScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildItemCard(String name, String rate, String stock) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: const Color(0xFFfee2e2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.inventory_2, color: Colors.red),
-        ),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text('$rate • $stock', style: TextStyle(color: Colors.grey.shade600)),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
-  }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETTINGS SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -789,6 +739,7 @@ class SettingsScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 120,
             pinned: true,
+            backgroundColor: const Color(0xFF052e16),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
@@ -823,11 +774,12 @@ class SettingsScreen extends StatelessWidget {
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
                     leading: Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFdcfce7),
+                        color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(Icons.business, color: Colors.green, size: 28),
@@ -837,17 +789,17 @@ class SettingsScreen extends StatelessWidget {
                     trailing: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFfef3c7),
+                        color: Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text('FREE', style: TextStyle(color: Color(0xFFb45309), fontWeight: FontWeight.w700)),
+                      child: const Text('FREE', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ),
               ),
               _buildSettingSection('App', [
                 {'icon': Icons.language, 'label': 'Bhasha Badlo', 'sub': 'Abhi: Hindi'},
-                {'icon': Icons.fingerprint, 'label': 'App Lock', 'sub': 'Fingerprint ON', 'toggle': true},
+                {'icon': Icons.fingerprint, 'label': 'App Lock', 'sub': 'Fingerprint ON'},
                 {'icon': Icons.palette, 'label': 'Theme', 'sub': 'Light Mode'},
               ]),
               _buildSettingSection('Data & Backup', [
@@ -857,7 +809,7 @@ class SettingsScreen extends StatelessWidget {
               ]),
               _buildSettingSection('More', [
                 {'icon': Icons.star, 'label': 'App ko Rate Karein', 'sub': 'Play Store par'},
-                {'icon': Icons.diamond, 'label': 'Premium Unlock', 'sub': 'Ad-free experience', 'special': true},
+                {'icon': Icons.diamond, 'label': 'Premium Unlock', 'sub': 'Ad-free experience'},
                 {'icon': Icons.info, 'label': 'App ke Baare Mein', 'sub': 'v4.1.8 • PC Computer Amreli'},
               ]),
               const Padding(
@@ -865,7 +817,7 @@ class SettingsScreen extends StatelessWidget {
                 child: Text(
                   'Cash Counter v4.1.8 • PC Computer Amreli',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 11, fontFamily: 'JetBrainsMono'),
+                  style: TextStyle(color: Colors.grey, fontSize: 11),
                 ),
               ),
             ]),
@@ -893,35 +845,20 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Column(
               children: items.asMap().entries.map((entry) {
-                final index = entry.key;
                 final item = entry.value;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: item['special'] == true ? const Color(0xFFfef3c7) : null,
-                    border: index < items.length - 1 ? Border(bottom: BorderSide(color: Colors.grey.shade100)) : null,
-                  ),
-                  child: ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: item['special'] == true ? const Color(0xFFfcd34d) : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(item['icon'], color: item['special'] == true ? const Color(0xFFb45309) : Colors.grey.shade700),
+                return ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    title: Text(
-                      item['label'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: item['special'] == true ? const Color(0xFF78350f) : null,
-                      ),
-                    ),
-                    subtitle: Text(item['sub'], style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                    trailing: item['toggle'] == true
-                        ? Switch(value: true, onChanged: (v) {}, activeColor: Colors.green)
-                        : const Icon(Icons.chevron_right, color: Colors.grey),
+                    child: Icon(item['icon'] as IconData, color: Colors.grey.shade700),
                   ),
+                  title: Text(item['label'], style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(item['sub'], style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                 );
               }).toList(),
             ),
