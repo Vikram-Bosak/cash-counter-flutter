@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'screens/home_screen.dart';
 import 'providers/app_provider.dart';
 
 void main() async {

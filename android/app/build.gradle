@@ -64,4 +64,13 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.10") {
+            because("Force Kotlin stdlib version to avoid conflicts")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10") {
+            because("Force Kotlin stdlib version to avoid conflicts")
+        }
+    }
+}
