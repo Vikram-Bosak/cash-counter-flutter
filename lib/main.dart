@@ -52,6 +52,7 @@ class _MainScreenState extends State<MainScreen> {
           KhataScreen(),
           CashCounterScreen(),
           StockScreen(),
+          NotesScreen(),
           SettingsScreen(),
         ],
       ),
@@ -67,6 +68,7 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(icon: Icon(Icons.book_outlined), selectedIcon: Icon(Icons.book), label: 'Khata'),
           NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments), label: 'Cash'),
           NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Stock'),
+          NavigationDestination(icon: Icon(Icons.note_alt_outlined), selectedIcon: Icon(Icons.note_alt), label: 'Notes'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
@@ -864,6 +866,101 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTES SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class NotesScreen extends StatelessWidget {
+  const NotesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final notes = [
+      {'title': 'Market List', 'content': 'Aata, Daal, Tel, Chawal...', 'date': '14 Apr 2026'},
+      {'title': 'Payment Pending', 'content': 'Ramesh se ₹5000 lene hain', 'date': '13 Apr 2026'},
+      {'title': 'Meeting Notes', 'content': 'Supplier se baat karni hai', 'date': '12 Apr 2026'},
+    ];
+
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: const Color(0xFF052e16),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF052e16), Color(0xFF166534)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '📝 Notes',
+                          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final note = notes[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.note_alt, color: Colors.purple),
+                    ),
+                    title: Text(note['title']!, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(note['content']!, style: TextStyle(color: Colors.grey.shade700)),
+                        const SizedBox(height: 4),
+                        Text(note['date']!, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                  ),
+                );
+              },
+              childCount: notes.length,
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF16a34a),
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () {},
       ),
     );
   }
