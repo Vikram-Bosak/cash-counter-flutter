@@ -1,7 +1,7 @@
 name: cash_counter
 description: Cash Counter - Credit Debit App for Indian SMBs
 publish_to: 'none'
-version: 4.1.8+132
+version: 4.2.0+140
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -17,7 +17,7 @@ dependencies:
   intl: ^0.18.1
   share_plus: ^7.2.1
   pdf: ^3.10.7
-  printing: ^5.12.0
+  printing: ^5.14.0
   excel: ^4.0.2
   google_fonts: ^6.1.0
 
