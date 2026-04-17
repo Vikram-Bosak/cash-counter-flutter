@@ -545,7 +545,14 @@ class HomeDashboard extends StatelessWidget {
                 size: 20,
               ),
             ),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Search coming soon...', style: GoogleFonts.bricolageGrotesque()),
+                  backgroundColor: AppTheme.primary,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -743,6 +750,12 @@ class HomeDashboard extends StatelessWidget {
             Icons.payments,
             const Color(0xfffbbf24),
             const Color(0xFF78350f),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CashCounterScreen()),
+              );
+            },
           ),
           _buildActionCard(
             'Udhar Khata',
@@ -750,6 +763,14 @@ class HomeDashboard extends StatelessWidget {
             Icons.menu_book,
             AppTheme.primary,
             Colors.white,
+            onTap: () {
+              final state = context.findAncestorStateOfType<_MainScreenState>();
+              if (state != null) {
+                state.setState(() {
+                  state._currentIndex = 1;
+                });
+              }
+            },
           ),
           _buildActionCard(
             'Income/Expense',
@@ -757,6 +778,7 @@ class HomeDashboard extends StatelessWidget {
             Icons.swap_vert,
             AppTheme.tertiary,
             Colors.white,
+            onTap: () {},
           ),
           _buildActionCard(
             'Stock Inventory',
@@ -764,6 +786,7 @@ class HomeDashboard extends StatelessWidget {
             Icons.inventory_2,
             const Color(0xFF7c3aed),
             Colors.white,
+            onTap: () {},
           ),
         ],
       ),
@@ -775,44 +798,48 @@ class HomeDashboard extends StatelessWidget {
     String subtitle,
     IconData icon,
     Color bgColor,
-    Color iconColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: bgColor.withOpacity(0.1),
-              shape: BoxShape.circle,
+    Color iconColor, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap ?? () {},
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: bgColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: bgColor, size: 24),
             ),
-            child: Icon(icon, color: bgColor, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.onSurface,
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 12,
-              color: AppTheme.onSurfaceVariant,
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 12,
+                color: AppTheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -835,7 +862,14 @@ class HomeDashboard extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  final state = context.findAncestorStateOfType<_MainScreenState>();
+                  if (state != null) {
+                    state.setState(() {
+                      state._currentIndex = 3; // History tab
+                    });
+                  }
+                },
                 child: Text(
                   'View All',
                   style: GoogleFonts.bricolageGrotesque(
@@ -1022,7 +1056,14 @@ class _UdharKhataScreenState extends State<UdharKhataScreen> {
               ),
               child: Icon(Icons.search, color: const Color(0xFF064e3b), size: 20),
             ),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Search coming soon...', style: GoogleFonts.bricolageGrotesque()),
+                  backgroundColor: AppTheme.primary,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -1064,11 +1105,11 @@ class _UdharKhataScreenState extends State<UdharKhataScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('All', true),
+                _buildFilterChip('All', _filter == 'All'),
                 const SizedBox(width: 12),
-                _buildFilterChip('Credit (You Give)', false),
+                _buildFilterChip('Credit (You Give)', _filter == 'Credit (You Give)'),
                 const SizedBox(width: 12),
-                _buildFilterChip('Debit (You Take)', false),
+                _buildFilterChip('Debit (You Take)', _filter == 'Debit (You Take)'),
               ],
             ),
           ),
@@ -1358,14 +1399,18 @@ class _UdharKhataScreenState extends State<UdharKhataScreen> {
   }
 
   void _showAddPartyDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text('Add Party', style: AppTheme.titleLarge),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Name',
                 border: OutlineInputBorder(
@@ -1375,6 +1420,7 @@ class _UdharKhataScreenState extends State<UdharKhataScreen> {
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: phoneController,
               decoration: InputDecoration(
                 labelText: 'Phone',
                 border: OutlineInputBorder(
@@ -1387,11 +1433,21 @@ class _UdharKhataScreenState extends State<UdharKhataScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Party "${nameController.text}" added!', style: GoogleFonts.bricolageGrotesque()),
+                    backgroundColor: AppTheme.primary,
+                  ),
+                );
+              }
+            },
             child: const Text('Save'),
           ),
         ],
@@ -1458,7 +1514,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               child: const Icon(Icons.arrow_back, color: Color(0xFF064e3b)),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pop(context);
+            },
           ),
           Text(
             'The Ledger',
@@ -1606,7 +1664,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildQuickAmounts() {
-    final amounts = ['₹500', '₹1000', '₹2000', '₹5000'];
+    final amounts = ['500', '1000', '2000', '5000'];
     return SizedBox(
       height: 60,
       child: ListView(
@@ -1617,7 +1675,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             margin: const EdgeInsets.only(right: 12),
             child: ElevatedButton(
               onPressed: () {
-                _amountController.text = amount.replaceAll('₹', '');
+                setState(() {
+                  _amountController.text = amount;
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.surfaceContainer,
@@ -1628,7 +1688,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 elevation: 0,
               ),
               child: Text(
-                amount,
+                '₹$amount',
                 style: GoogleFonts.robotoMono(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -1749,51 +1809,80 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildSaveButton() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primary, AppTheme.primaryContainer],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return GestureDetector(
+      onTap: () {
+        final amount = double.tryParse(_amountController.text) ?? 0;
+        if (amount > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isCredit ? 'Income of ₹$amount recorded!' : 'Expense of ₹$amount recorded!',
+                style: GoogleFonts.bricolageGrotesque(),
+              ),
+              backgroundColor: _isCredit ? AppTheme.primary : AppTheme.error,
             ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withOpacity(0.25),
-                blurRadius: 40,
-                offset: const Offset(0, 12),
+          );
+          _amountController.text = '0.00';
+          _partyController.clear();
+          _notesController.clear();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Please enter a valid amount',
+                style: GoogleFonts.bricolageGrotesque(),
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Text(
-                'Save Transaction',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.7),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppTheme.primary, AppTheme.primaryContainer],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withOpacity(0.25),
+                  blurRadius: 40,
+                  offset: const Offset(0, 12),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  'Save Transaction',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1865,7 +1954,14 @@ class HistoryScreen extends StatelessWidget {
               ),
               child: Icon(Icons.filter_list, color: const Color(0xFF064e3b)),
             ),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Filter coming soon...', style: GoogleFonts.bricolageGrotesque()),
+                  backgroundColor: AppTheme.primary,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -2051,7 +2147,14 @@ class _CashCounterScreenState extends State<CashCounterScreen> {
                             ),
                             child: const Icon(Icons.share, color: Colors.white, size: 20),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Share coming soon...', style: GoogleFonts.bricolageGrotesque()),
+                                backgroundColor: AppTheme.primary,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -2406,7 +2509,23 @@ class SettingsScreen extends StatelessWidget {
                         : item['sync'] == true
                             ? Icon(Icons.sync, color: AppTheme.primary)
                             : const Icon(Icons.chevron_right),
-                    onTap: () {},
+                    onTap: () {
+                      if (item['label'] == 'Export to PDF') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Exporting to PDF...', style: GoogleFonts.bricolageGrotesque()),
+                            backgroundColor: AppTheme.primary,
+                          ),
+                        );
+                      } else if (item['label'] == 'Export to Excel') {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Exporting to Excel...', style: GoogleFonts.bricolageGrotesque()),
+                            backgroundColor: AppTheme.primary,
+                          ),
+                        );
+                      }
+                    },
                   ),
                   if (i < items.length - 1)
                     Divider(
